@@ -34,79 +34,16 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		return -1;			// エラーが起きたら直ちに終了
 	}
 
-	//四角の位置
-	int X = GAME_WIDTH/2;	//横の中心
-	int Y = GAME_HEIGTH/2;	//縦の中心
-
-	//四角の大きさ
-	int width = 32;//横
-	int height = 32;//縦
-
-	//円の半径
-	int radius = 100;
-
-	//速度
-	int speed = 1;
-	int XSpeed = 2;
-	int YSpeed = 2;
-
 	//ダブルバッファリングの有効化
 	SetDrawScreen(DX_SCREEN_BACK);
 
 	//無限ループ
 	while (1)
 	{
-		//なにかしらキーが押された
-		if (CheckHitKeyAll() != 0)	//0のとき、なにかキーを押された
-		{
-			break;	//無限ループを抜ける	
-		}
 
-		//メッセージを受け取り続ける
-		if (ProcessMessage() != 0)	//-1のとき、エラーやウィンドウを閉じられた
-		{
-			break;	//無限ループを抜ける
-		}
-
-		//画面を消去する
-		if (ClearDrawScreen() != 0){break;}
-
-		//四角を描写
-		//DrawBox(
-		//	X, Y, X + width, Y + height,
-		//	GetColor(255,0,0),//色を取得
-		//	TRUE//塗りつぶし
-		//);
-
-		//円を描画
-		DrawCircle(
-			X, Y, radius,
-			GetColor(122, 122, 0),
-			FALSE , 5
-		);
-
-		X += XSpeed;
-		//斜め上に動かす
-		Y += YSpeed;
-
-		//端に来たら移動する向きを反転させる
-		if ( X - radius < 0 || X + radius > GAME_WIDTH)	//画面の横から出たとき
-		{
-			//-1なら+1に、+1ならば-1にする
-			XSpeed = -XSpeed;	//移動の向きを反転させる
-			//壁に当たったら速くなる
-			if (XSpeed > 0) { XSpeed += 2; }
-			else if (XSpeed < 0) { XSpeed -= 2; }
-		}
-
-		if (Y - radius< 0 || Y + radius > GAME_HEIGTH)	//画面の縦から出たとき
-		{
-			//-1なら+1に、+1ならば-1にする
-			YSpeed = -YSpeed;	//移動の向きを反転させる
-			//壁に当たったら速くなる
-			if (YSpeed > 0) { YSpeed += 2; }
-			else if (YSpeed < 0) { YSpeed -= 2; }
-		}
+		if (ProcessMessage() != 0){break;}	//メッセージを受け取り続ける
+		if (ClearDrawScreen() != 0){break;} //画面の商経
+		
 
 		ScreenFlip();	//ダブルバッファリングした画面を描画
 
