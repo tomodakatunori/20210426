@@ -1,9 +1,9 @@
+//キーボードのヘッダーファイル
+
 #pragma once
 
 //ヘッダーファイルを読み込み
 #include "Dxlib.h"
-
-//キーボードのヘッダーファイル
 
 //マクロ定義
 #define KEY_KIND_MAX 256	//取得するキーの種類	
@@ -20,8 +20,8 @@ struct KEYBOARD
 extern KEYBOARD keyboard;
 
 //プロトタイプ宣言
-extern VOID AllKeyUpdate(VOID);		//すべてのキーの状態を取得する
-extern BOOL KeyDown(int KEY_INPUT_);		//特定のキーを押しているか？
-extern BOOL KeyUp(int KEY_INPUT_);		//特定のキーをあげているか？
-extern BOOL KeyClick(int KEY_INPUT_);	//特定のキーをクリックしたか？
+extern VOID AllKeyUpdate(VOID);							//すべてのキーの状態を取得する
+extern BOOL KeyDown(int KEY_INPUT_);					//特定のキーを押しているか？
+extern BOOL KeyUp(int KEY_INPUT_);						//特定のキーをあげているか？
+extern BOOL KeyClick(int KEY_INPUT_);					//特定のキーをクリックしたか？
 extern BOOL KeyDownKeep(int KEY_INPUT_,int millSec);	//特定のキーを指定のミリ秒分押し続けているか？

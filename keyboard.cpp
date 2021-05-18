@@ -11,7 +11,7 @@ KEYBOARD keyboard;
 /// <summary>
 /// キーの入力状態を更新する
 /// </summary>
-VOID ALLKeyUpdate(VOID)
+VOID AllKeyUpdate(VOID)
 {
 	//直前のキー入力をとっておく
 	for (int i = 0; i < KEY_KIND_MAX; i++)
@@ -111,10 +111,10 @@ BOOL KeyDownKeep(int KEY_INPUT, int MillitTime)
 
 	if (keyboard.AllKeyState[ KEY_INPUT ] > UpdateTime)
 	{
-		return TRUE;
+		return TRUE;	//押し続けている
 	}
 	else
 	{
-		return FALSE;
+		return FALSE;	//押し続けていない
 	}
 }
