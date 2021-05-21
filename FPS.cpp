@@ -1,7 +1,6 @@
 //FPSのソースファイル
 
 //ヘッダファイルの読み込み
-#include "DXLib.h"
 #include "FPS.h"
 
 //グローバル変数
@@ -54,13 +53,17 @@ VOID FPSUpdate(VOID)
 }
 
 /// <summary>
-/// 平均FPS値を測定
+/// 平均FPS値を描画
 /// </summary>
 /// <param name=""></param>
 VOID FPSDraw(VOID)
 {
-	//文字列を描画
-	DrawFormatString(0, 20, GetColor(0, 0, 0), "FPS:%.1f", fps.DrawValue);
+	if (GAME_DEBUG ==TRUE)
+	{
+		//文字列を描画
+		DrawFormatString(0, GAME_HEIGTH - 20, GetColor(0, 0, 0), "FPS:%.1f", fps.DrawValue);
+	}
+	
 
 	return;
 }

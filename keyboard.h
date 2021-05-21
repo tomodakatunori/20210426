@@ -3,7 +3,7 @@
 #pragma once
 
 //ヘッダーファイルを読み込み
-#include "Dxlib.h"
+#include "game.h"	//ゲーム全体のヘッダファイル
 
 //マクロ定義
 #define KEY_KIND_MAX 256	//取得するキーの種類	
