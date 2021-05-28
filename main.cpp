@@ -20,11 +20,28 @@ struct CHARACTOR
 	BOOL IsDraw = FALSE;	//画像が描画できるか
 };
 
+//動画の構造体
+struct MOVIE
+{
+	int handle = -1;	//動画のハンドル
+	char path[255];		//動画のパス
+
+	int x;		//X位置
+	int y;		//Y位置
+	int width;	//幅
+	int height;	//高さ
+
+	int Volume = 255;	//ボリューム　２５５～０
+};
+
 //グローバル変数
 //シーンを管理する変数
 GAME_SCENE GameScene;		//現在のゲームシーン
 GAME_SCENE OldGameScene;	//前回のゲームシーン
 GAME_SCENE NextGameScene;	//次のゲームシーン
+
+//プレイ背景の動画
+MOVIE playMovie;
 
 //プレイヤー
 CHARACTOR player;
@@ -107,6 +124,26 @@ int WINAPI WinMain(
 
 	//ゲーム全体の初期化
 
+	//プレイ動画の背景を読み込む
+	strcpyDx(playMovie.path, ".\\movie\\playmovie.mp4");	//パスのコピー
+	playMovie.handle = LoadGraph(playMovie.path);			//画像の読み込み
+
+	//動画が読み込めなかったとき
+	if (playMovie.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			playMovie.path,			//メッセージ本文
+			"画像読み込みエラー",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+		DxLib_End();	//強制終了
+		return -1;		//エラー終了
+	}
+
+	//動画の幅と高さを取得
+	GetGraphSize(playMovie.handle, &playMovie.width, &playMovie.height);
+
 	//プレイヤーの画像を読み込み
 	strcpyDx(player.path, ".\\image\\player.png");	//パスのコピー
 	player.handle = LoadGraph(player.path);	//画像の読み込み
@@ -124,6 +161,9 @@ int WINAPI WinMain(
 
 	//画像の幅と高さを取得
 	GetGraphSize(player.handle, &player.width, &player.height);
+
+	//動画のボリューム
+	playMovie.Volume = 255;
 
 	//プレイヤーを初期化
 	player.x = GAME_WIDTH / 2 - player.width / 2;	//中央寄せ
@@ -153,8 +193,8 @@ int WINAPI WinMain(
 	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
 
 	//ゴールを初期化
-	Goal.x = GAME_WIDTH - Goal.width;	
-	Goal.y = 0;
+	Goal.x = 0;	
+	Goal.y = GAME_HEIGTH /2;
 	Goal.speed = 500;		//移動速度
 	Goal.IsDraw = TRUE;		//描画できる
 
@@ -224,8 +264,9 @@ int WINAPI WinMain(
 	}
 
 	//終わる時の処理
-	DeleteGraph(player.handle);	//画像をメモリから削除
-	DeleteGraph(Goal.handle);	//画像をメモリから削除
+	DeleteGraph(playMovie.handle);	//動画をメモリから削除
+	DeleteGraph(player.handle);		//画像をメモリから削除
+	DeleteGraph(Goal.handle);		//画像をメモリから削除
 
 	DxLib_End();	//ＤＸライブラリ使用の終了処理
 
@@ -342,6 +383,20 @@ VOID PlayProc(VOID)
 /// </summary>
 VOID PlayDraw(VOID)
 {
+	//背景動画
+
+	//もし動画が再生されていないとき
+	if (GetMovieStateToGraph(playMovie.handle) == 0)
+	{
+		//再生する
+		SeekMovieToGraph(playMovie.handle, 0);	//シークバーを最初に戻す
+		PlayMovieToGraph(playMovie.handle);		//動画の再生
+	}
+
+	//動画の描画
+	DrawExtendGraph(0, 0, GAME_WIDTH, GAME_HEIGTH, playMovie.handle, TRUE);
+
+	//プレイヤーを描写
 	if (player.IsDraw == TRUE)
 	{
 		//画像を描写
