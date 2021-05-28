@@ -72,6 +72,8 @@ VOID ChangeScene(GAME_SCENE scene);	//シーン切り替え
 VOID CollUpdatePlayer(CHARACTOR* chara);	//当たり判定の領域を更新
 VOID CollUpdate(CHARACTOR* chara);			//当たり判定
 
+BOOL onCollRect(RECT a, RECT b);	//矩形と矩形の当たり判定
+
 // プログラムは WinMain から始まります
 //windousのプログラミング＝winAPIで動いている
 //DxLibはDirectxというゲームプログラムを簡単に使える仕組み
@@ -123,17 +125,17 @@ int WINAPI WinMain(
 	//画像の幅と高さを取得
 	GetGraphSize(player.handle, &player.width, &player.height);
 
-	//当たり判定を更新する
-	CollUpdatePlayer(&player);	//プレイヤーの当たり判定のアドレス
-
 	//プレイヤーを初期化
 	player.x = GAME_WIDTH / 2 - player.width / 2;	//中央寄せ
 	player.y = GAME_HEIGTH / 2 - player.height / 2;	//中央寄せ
 	player.speed = 500;		//移動速度
 	player.IsDraw = TRUE;	//描画できる
 
+	//当たり判定を更新する
+	CollUpdatePlayer(&player);	//プレイヤーの当たり判定のアドレス
+
 	//ゴールの画像を読み込み
-	strcpyDx(Goal.path, ".\\image\\Goal.jpg");	//パスのコピー
+	strcpyDx(Goal.path, ".\\image\\Goal.png");	//パスのコピー
 	Goal.handle = LoadGraph(Goal.path);	//画像の読み込み
 	if (Goal.handle == -1)
 	{
@@ -150,14 +152,14 @@ int WINAPI WinMain(
 	//画像の幅と高さを取得
 	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
 
-	//当たり判定を更新する
-	CollUpdate(&Goal);	//プレイヤーの当たり判定のアドレス
-
 	//ゴールを初期化
 	Goal.x = GAME_WIDTH - Goal.width;	
 	Goal.y = 0;
 	Goal.speed = 500;		//移動速度
 	Goal.IsDraw = TRUE;		//描画できる
+
+	//当たり判定を更新する
+	CollUpdate(&Goal);	//プレイヤーの当たり判定のアドレス
 
 	//無限ループ
 	while (1)
@@ -296,15 +298,7 @@ VOID Play(VOID)
 /// </summary>
 VOID PlayProc(VOID)
 {
-	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
-	{
-		//シーン切り替え
-		//次のシーンの初期化をここで行うと楽
-
-		//エンド画面に切り替え
-		ChangeScene(GAME_SCENE_END);
-	}
-
+	
 	//プレイヤーの操作
 	if (KeyDown(KEY_INPUT_UP) == TRUE)
 	{
@@ -324,10 +318,21 @@ VOID PlayProc(VOID)
 		player.x += player.speed * fps.DeltaTime;
 	}
 
-
-
 	//当たり判定を更新する
 	CollUpdatePlayer(&player);
+
+	//ゴールの当たり判定を更新
+	CollUpdate(&Goal);
+
+	//プレイヤーがゴールに当たったときは
+	if (onCollRect(player.coll, Goal.coll) == true)
+	{
+		//エンド画面に切り替え
+		ChangeScene(GAME_SCENE_END);
+
+		//処理を強制終了
+		return;
+	}
 
 	return;
 }
@@ -518,10 +523,10 @@ VOID ChangeDraw(VOID)
 /// <param name="Coll">当たり判定の領域</param>
 VOID CollUpdatePlayer(CHARACTOR* chara)
 {
-	chara->coll.left = chara->x;
-	chara->coll.top = chara->y;
-	chara->coll.right = chara->x + chara->width;
-	chara->coll.bottom = chara->y + chara->height;
+	chara->coll.left = chara->x + 70;
+	chara->coll.top = chara->y + 80;
+	chara->coll.right = chara->x + chara->width - 70;
+	chara->coll.bottom = chara->y + chara->height - 150;
 
 	return;
 }
@@ -538,4 +543,28 @@ VOID CollUpdate(CHARACTOR* chara)
 	chara->coll.bottom = chara->y + chara->height;
 
 	return;
+}
+
+/// <summary>
+/// 矩形と矩形の当たり判定
+/// </summary>
+/// <param name="a">矩形A</param>
+/// <param name="b">矩形B</param>
+/// <returns>当たったらTRUE、当たらなかったらFALSE</returns>
+BOOL onCollRect(RECT a, RECT b)
+{
+	if (a.left < b.right &&		//aの左辺X座標 < bの右辺X座標かつ
+		a.right > b.left &&		//aの右辺X座標 > bの左辺X座標かつ
+		a.top < b.bottom &&		//aの上辺Y座標 < bの下辺Y座標かつ
+		a.bottom > b.top		//aの下辺Y座標 > bの上辺Y座標
+		)
+	{
+		//当たっている時
+		return TRUE;
+	}
+	else
+	{
+		//当たっていない時
+		return FALSE;
+	}
 }
