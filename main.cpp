@@ -34,6 +34,16 @@ struct MOVIE
 	int Volume = 255;	//ボリューム　２５５～０
 };
 
+//音楽の構造体
+struct AUDIO
+{
+	int handle = -1;		//音楽のハンドル
+	char path[255];		//音楽のパス
+
+	int Volume = -1;	//音楽のボリューム（０～２５５）
+	int playType = -1;
+};
+
 //グローバル変数
 //シーンを管理する変数
 GAME_SCENE GameScene;		//現在のゲームシーン
@@ -48,6 +58,11 @@ CHARACTOR player;
 
 //ゴール
 CHARACTOR Goal;
+
+//音楽
+AUDIO TitleBGM;
+AUDIO PlayBGM;
+AUDIO EndBGM;
 
 //画面の切り替え
 BOOL IsfadeOut = FALSE;	//フェードアウト
@@ -207,6 +222,10 @@ int WINAPI WinMain(
 
 	DxLib_End();	//ＤＸライブラリ使用の終了処理
 
+	DeleteSoundMem(TitleBGM.handle);	//タイトルBGMをメモリから削除
+	DeleteSoundMem(PlayBGM.handle);		//プレイBGMをメモリから削除
+	DeleteSoundMem(EndBGM.handle);		//エンドBGMをメモリから削除
+
 	return 0;		//ソフトの終了 
 }
 
@@ -275,6 +294,63 @@ BOOL GameLoad()
 	//画像の幅と高さを取得
 	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
 
+	//音楽の読み込む
+	strcatDx(TitleBGM.path, ".\\Audio\\魔王魂  ファンタジー14.mp3");
+	TitleBGM.handle = LoadSoundMem(TitleBGM.path);
+	//読み込めなかった時のエラー
+	if (TitleBGM.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			TitleBGM.path,				//メッセージ本文
+			"音楽読み込みエラー",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+
+		return FALSE;	//読み込み失敗
+	}
+
+	TitleBGM.playType = DX_PLAYTYPE_LOOP;
+	TitleBGM.Volume = 255;
+
+	//音楽の読み込む
+	strcatDx(PlayBGM.path, ".\\Audio\\魔王魂  民族31.mp3");
+	PlayBGM.handle = LoadSoundMem(PlayBGM.path);
+	//読み込めなかった時のエラー
+	if (PlayBGM.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			PlayBGM.path,				//メッセージ本文
+			"音楽読み込みエラー",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+
+		return FALSE;	//読み込み失敗
+	}
+
+	PlayBGM.playType = DX_PLAYTYPE_LOOP;
+	PlayBGM.Volume = 255;
+
+	//音楽の読み込む
+	strcatDx(EndBGM.path, ".\\Audio\\魔王魂  ピアノ30.mp3");
+	EndBGM.handle = LoadSoundMem(EndBGM.path);
+	//読み込めなかった時のエラー
+	if (EndBGM.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			EndBGM.path,				//メッセージ本文
+			"音楽読み込みエラー",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+
+		return FALSE;	//読み込み失敗
+	}
+
+	EndBGM.playType = DX_PLAYTYPE_LOOP;
+	EndBGM.Volume = 255;
+
 	return TRUE;	//すべて読み込めた
 }
 
@@ -334,6 +410,9 @@ VOID TitleProc(VOID)
 {
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
+		//画面を切り替えたとき音楽を止める
+		StopSoundMem(TitleBGM.handle);
+
 		//シーン切り替え
 		//次のシーンの初期化をここで行うと楽
 
@@ -342,6 +421,15 @@ VOID TitleProc(VOID)
 
 		//プレイ画面に切り替え
 		ChangeScene(GAME_SCENE_PLAY);
+
+		return;
+	}
+
+	//BGMが流れていないとき
+	if (CheckSoundMem(TitleBGM.handle) == 0)
+	{
+		//BGMを流す
+		PlaySoundMem(TitleBGM.handle, TitleBGM.playType);
 	}
 
 	return;
@@ -401,11 +489,21 @@ VOID PlayProc(VOID)
 	//プレイヤーがゴールに当たったときは
 	if (onCollRect(player.coll, Goal.coll) == true)
 	{
+		//画面を切り替えたとき音楽を止める
+		StopSoundMem(PlayBGM.handle);
+
 		//エンド画面に切り替え
 		ChangeScene(GAME_SCENE_END);
 
 		//処理を強制終了
 		return;
+	}
+
+	//BGMが流れていないとき
+	if (CheckSoundMem(PlayBGM.handle) == 0)
+	{
+		//BGMを流す
+		PlaySoundMem(PlayBGM.handle, PlayBGM.playType);
 	}
 
 	return;
@@ -483,13 +581,24 @@ VOID EndProc(VOID)
 {
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
+		//画面を切り替えたとき音楽を止める
+		StopSoundMem(EndBGM.handle);
+
 		//シーン切り替え
 		//次のシーンの初期化をここで行うと楽
 
 		//タイトル画面に切り替え
 		ChangeScene(GAME_SCENE_TITLE);
+
+		return;
 	}
 
+	//BGMが流れていないとき
+	if (CheckSoundMem(EndBGM.handle) == 0)
+	{
+		//BGMを流す
+		PlaySoundMem(EndBGM.handle, EndBGM.playType);
+	}
 
 	return;
 }
