@@ -5,8 +5,8 @@
 
 //構造体の定義
 
-//キャラクタの構造体
-struct CHARACTOR
+//画像の構造体
+struct IMAGE
 {
 	int handle = -1;	//画像のハンドル
 	char path[255];		//画像の場所（パス）
@@ -14,10 +14,17 @@ struct CHARACTOR
 	int y;				//Y位置
 	int width;			//幅
 	int height;			//高さ
-	int speed = 5;		//移動速度
 
 	RECT coll;				//当たり判定の領域(四角)
 	BOOL IsDraw = FALSE;	//画像が描画できるか
+};
+
+//キャラクタの構造体
+struct CHARACTOR
+{
+    IMAGE img;
+	int speed = 5;		//移動速度
+	RECT coll;				//当たり判定の領域(四角)
 };
 
 //動画の構造体
@@ -59,13 +66,18 @@ CHARACTOR player;
 //ゴール
 CHARACTOR Goal;
 
+//ロゴを読み込む
+IMAGE Titlelogo;
+IMAGE Titleenter;
+IMAGE EndClear;
+
 //音楽
 AUDIO TitleBGM;
 AUDIO PlayBGM;
 AUDIO EndBGM;
 
 //効果音
-AUDIO PlayerSE;
+AUDIO playerSE;
 
 //画面の切り替え
 BOOL IsfadeOut = FALSE;	//フェードアウト
@@ -219,17 +231,22 @@ int WINAPI WinMain(
 	}
 
 	//終わる時の処理
-	DeleteGraph(playMovie.handle);	//動画をメモリから削除
-	DeleteGraph(player.handle);		//画像をメモリから削除
-	DeleteGraph(Goal.handle);		//画像をメモリから削除
+	DeleteGraph(playMovie.handle);		//動画をメモリから削除
 
-	DxLib_End();	//ＤＸライブラリ使用の終了処理
+	DeleteGraph(player.img.handle);		//画像をメモリから削除
+	DeleteGraph(Goal.img.handle);		//画像をメモリから削除
+
+	DeleteGraph(Titlelogo.handle);		//ロゴをメモリから削除
+	DeleteGraph(Titleenter.handle);		//ロゴをメモリから削除
+	DeleteGraph(EndClear.handle);		//ロゴをメモリから削除
 
 	DeleteSoundMem(TitleBGM.handle);	//タイトルBGMをメモリから削除
 	DeleteSoundMem(PlayBGM.handle);		//プレイBGMをメモリから削除
 	DeleteSoundMem(EndBGM.handle);		//エンドBGMをメモリから削除
 
-	DeleteSoundMem(PlayerSE.handle);		//SEをメモリから削除
+	DeleteSoundMem(playerSE.handle);		//SEをメモリから削除
+
+	DxLib_End();	//ＤＸライブラリ使用の終了処理
 
 	return 0;		//ソフトの終了 
 }
@@ -261,13 +278,13 @@ BOOL GameLoad()
 	GetGraphSize(playMovie.handle, &playMovie.width, &playMovie.height);
 
 	//プレイヤーの画像を読み込み
-	strcpyDx(player.path, ".\\image\\player.png");	//パスのコピー
-	player.handle = LoadGraph(player.path);	//画像の読み込み
-	if (player.handle == -1)
+	strcpyDx(player.img.path, ".\\image\\player.png");	//パスのコピー
+	player.img.handle = LoadGraph(player.img.path);	//画像の読み込み
+	if (player.img.handle == -1)
 	{
 		MessageBox(
 			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			player.path,			//メッセージ本文
+			player.img.path,			//メッセージ本文
 			"画像読み込みエラー",	//メッセージタイトル
 			MB_OK					//ボタン
 		);
@@ -276,19 +293,19 @@ BOOL GameLoad()
 	}
 
 	//画像の幅と高さを取得
-	GetGraphSize(player.handle, &player.width, &player.height);
+	GetGraphSize(player.img.handle, &player.img.width, &player.img.height);
 
 	//動画のボリューム
 	playMovie.Volume = 255;
 
 	//ゴールの画像を読み込み
-	strcpyDx(Goal.path, ".\\image\\Goal.png");	//パスのコピー
-	Goal.handle = LoadGraph(Goal.path);	//画像の読み込み
-	if (Goal.handle == -1)
+	strcpyDx(Goal.img.path, ".\\image\\Goal.png");	//パスのコピー
+	Goal.img.handle = LoadGraph(Goal.img.path);	//画像の読み込み
+	if (Goal.img.handle == -1)
 	{
 		MessageBox(
 			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			Goal.path,				//メッセージ本文
+			Goal.img.path,				//メッセージ本文
 			"画像読み込みエラー",	//メッセージタイトル
 			MB_OK					//ボタン
 		);
@@ -297,7 +314,7 @@ BOOL GameLoad()
 	}
 
 	//画像の幅と高さを取得
-	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
+	GetGraphSize(Goal.img.handle, &Goal.img.width, &Goal.img.height);
 
 	//音楽の読み込む
 	strcatDx(TitleBGM.path, ".\\Audio\\魔王魂  ピアノ30.mp3");
@@ -357,14 +374,14 @@ BOOL GameLoad()
 	EndBGM.Volume = 255;
 
 	//音楽の読み込む
-	strcatDx(PlayerSE.path, ".\\Audio\\魔王魂  馬01.mp3");
-	PlayerSE.handle = LoadSoundMem(PlayerSE.path);
+	strcatDx(playerSE.path, ".\\Audio\\魔王魂  馬01.mp3");
+	playerSE.handle = LoadSoundMem(playerSE.path);
 	//読み込めなかった時のエラー
-	if (PlayerSE.handle == -1)
+	if (playerSE.handle == -1)
 	{
 		MessageBox(
 			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			PlayerSE.path,				//メッセージ本文
+			playerSE.path,				//メッセージ本文
 			"音楽読み込みエラー",	//メッセージタイトル
 			MB_OK					//ボタン
 		);
@@ -372,8 +389,53 @@ BOOL GameLoad()
 		return FALSE;	//読み込み失敗
 	}
 
-	PlayerSE.playType = DX_PLAYTYPE_BACK;
-	PlayerSE.Volume = 255;
+	playerSE.playType = DX_PLAYTYPE_BACK;
+	playerSE.Volume = 255;
+
+	//タイトルロゴの読み込み
+	strcpyDx(Titlelogo.path, ".\\image\\タイトルロゴ.png");	//パスのコピー
+	Titlelogo.handle = LoadGraph(Titlelogo.path);	//画像の読み込み
+	if (Titlelogo.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			Titlelogo.path,			//メッセージ本文
+			"画像読み込みエラー",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+
+		return FALSE;	//読み込み失敗
+	}
+
+	//エンターロゴの読み込み
+	strcpyDx(Titleenter.path, ".\\image\pushenter.png");	//パスのコピー
+	Titleenter.handle = LoadGraph(Titleenter.path);	//画像の読み込み
+	if (Titleenter.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),			//メインのウィンドウハンドル
+			Titleenter.path,				//メッセージ本文
+			"画像読み込みエラー",			//メッセージタイトル
+			MB_OK							//ボタン
+		);
+
+		return FALSE;	//読み込み失敗
+	}
+
+	//エンドロゴの読み込み
+	strcpyDx(EndClear.path, ".\\image\end.png");	//パスのコピー
+	EndClear.handle = LoadGraph(EndClear.path);	//画像の読み込み
+	if (EndClear.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),			//メインのウィンドウハンドル
+			EndClear.path,					//メッセージ本文
+			"画像読み込みエラー",			//メッセージタイトル
+			MB_OK							//ボタン
+		);
+
+		return FALSE;	//読み込み失敗
+	}
 
 	return TRUE;	//すべて読み込めた
 }
@@ -385,19 +447,19 @@ BOOL GameLoad()
 VOID GameInit(VOID)
 {
 	//プレイヤーを初期化
-	player.x = GAME_WIDTH / 2 - player.width / 2;	//中央寄せ
-	player.y = GAME_HEIGTH / 2 - player.height / 2;	//中央寄せ
+	player.img.x = GAME_WIDTH / 2 - player.img.width / 2;	//中央寄せ
+	player.img.y = GAME_HEIGTH / 2 - player.img.height / 2;	//中央寄せ
 	player.speed = 500;		//移動速度
-	player.IsDraw = TRUE;	//描画できる
+	player.img.IsDraw = TRUE;	//描画できる
 
 	//当たり判定を更新する
 	CollUpdatePlayer(&player);	//プレイヤーの当たり判定のアドレス
 
 		//ゴールを初期化
-	Goal.x = 0;
-	Goal.y = GAME_HEIGTH / 2;
+	Goal.img.x = 0;
+	Goal.img.y = GAME_HEIGTH / 2;
 	Goal.speed = 500;		//移動速度
-	Goal.IsDraw = TRUE;		//描画できる
+	Goal.img.IsDraw = TRUE;		//描画できる
 
 	//当たり判定を更新する
 	CollUpdate(&Goal);	//プレイヤーの当たり判定のアドレス
@@ -488,43 +550,43 @@ VOID PlayProc(VOID)
 	//プレイヤーの操作
 	if (KeyDown(KEY_INPUT_UP) == TRUE)
 	{
-		player.y -= player.speed * fps.DeltaTime;
+		player.img.y -= player.speed * fps.DeltaTime;
 
 		//動くときの効果音
-		if (CheckSoundMem(PlayerSE.handle) == 0)
+		if (CheckSoundMem(playerSE.handle) == 0)
 		{
-			PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
+			PlaySoundMem(playerSE.handle, playerSE.playType);
 		}
 	}
 	if (KeyDown(KEY_INPUT_DOWN) == TRUE)
 	{
-		player.y += player.speed * fps.DeltaTime;
+		player.img.y += player.speed * fps.DeltaTime;
 
 		//動くときの効果音
-		if (CheckSoundMem(PlayerSE.handle) == 0)
+		if (CheckSoundMem(playerSE.handle) == 0)
 		{
-			PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
+			PlaySoundMem(playerSE.handle, playerSE.playType);
 		}
 	}
 
 	if (KeyDown(KEY_INPUT_LEFT) == TRUE)
 	{
-		player.x -= player.speed * fps.DeltaTime;
+		player.img.x -= player.speed * fps.DeltaTime;
 
 		//動くときの効果音
-		if (CheckSoundMem(PlayerSE.handle) == 0)
+		if (CheckSoundMem(playerSE.handle) == 0)
 		{
-			PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
+			PlaySoundMem(playerSE.handle, playerSE.playType);
 		}
 	}
 	if (KeyDown(KEY_INPUT_RIGHT) == TRUE)
 	{
-		player.x += player.speed * fps.DeltaTime;
+		player.img.x += player.speed * fps.DeltaTime;
 
 		//動くときの効果音
-		if (CheckSoundMem(PlayerSE.handle) == 0)
+		if (CheckSoundMem(playerSE.handle) == 0)
 		{
-			PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
+			PlaySoundMem(playerSE.handle, playerSE.playType);
 		}
 	}
 
@@ -576,10 +638,10 @@ VOID PlayDraw(VOID)
 	DrawExtendGraph(0, 0, GAME_WIDTH, GAME_HEIGTH, playMovie.handle, TRUE);
 
 	//プレイヤーを描写
-	if (player.IsDraw == TRUE)
+	if (player.img.IsDraw == TRUE)
 	{
 		//画像を描写
-		DrawGraph(player.x, player.y, player.handle, TRUE);
+		DrawGraph(player.img.x, player.img.y, player.img.handle, TRUE);
 
 		//デバッグの時は、当たり判定の領域を描画
 		if (GAME_DEBUG == TRUE)
@@ -592,10 +654,10 @@ VOID PlayDraw(VOID)
 	}
 
 	//ゴールを描画
-	if (Goal.IsDraw == TRUE)
+	if (Goal.img.IsDraw == TRUE)
 	{
 		//画像を描写
-		DrawGraph(Goal.x, Goal.y, Goal.handle, TRUE);
+		DrawGraph(Goal.img.x, Goal.img.y, Goal.img.handle, TRUE);
 
 		//デバッグの時は、当たり判定の領域を描画
 		if (GAME_DEBUG == TRUE)
@@ -768,10 +830,10 @@ VOID ChangeDraw(VOID)
 /// <param name="Coll">当たり判定の領域</param>
 VOID CollUpdatePlayer(CHARACTOR* chara)
 {
-	chara->coll.left = chara->x + 70;
-	chara->coll.top = chara->y + 80;
-	chara->coll.right = chara->x + chara->width - 70;
-	chara->coll.bottom = chara->y + chara->height - 150;
+	chara->coll.left = chara->img.x + 70;
+	chara->coll.top = chara->img.y + 80;
+	chara->coll.right = chara->img.x + chara->img.width - 70;
+	chara->coll.bottom = chara->img.y + chara->img.height - 150;
 
 	return;
 }
@@ -782,10 +844,10 @@ VOID CollUpdatePlayer(CHARACTOR* chara)
 /// <param name="Coll">当たり判定の領域</param>
 VOID CollUpdate(CHARACTOR* chara)
 {
-	chara->coll.left = chara->x;					
-	chara->coll.top = chara->y;						
-	chara->coll.right = chara->x + chara->width;
-	chara->coll.bottom = chara->y + chara->height;
+	chara->coll.left = chara->img.x;					
+	chara->coll.top = chara->img.y;						
+	chara->coll.right = chara->img.x + chara->img.width;
+	chara->coll.bottom = chara->img.y + chara->img.height;
 
 	return;
 }
